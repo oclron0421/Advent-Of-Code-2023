@@ -28,7 +28,7 @@ unordered_map<char, int> cardValues = {
         {'2', 1},
         {'J', 0}
     };
-
+int product = 0;
 class Deal{
     public: 
         string hand; 
@@ -130,6 +130,16 @@ void printDealVector(vector<Deal>x){
     }
 }
 
+int getVectorValues(vector<Deal> x){
+    vector<Deal>::iterator itr;
+    int sum = 0; 
+    for(itr = x.begin(); itr != x.end(); itr++){
+        sum+=(*itr).value;
+        // cout<<(*itr).value<<endl;
+    }
+    return sum; 
+}
+
 int main(){
     int rank = 0; 
     vector<Deal> deals, dealsWithJ; 
@@ -183,20 +193,96 @@ int main(){
         }
         if((checkHand(*dealItr)==5)){
             if((*dealItr).hand=="JJJJJ"){
-                (*dealItr).hand = "KKKKK";
+                (*dealItr).hand = "AAAAA";
                 fiveOfAKind.push_back(*dealItr);
-            }else if(checkHand(*dealItr)==41){
-                int nonJ = (*dealItr).hand.find_first_not_of('J');
-                char toChange = (*dealItr).hand.at(nonJ);
-                for(int i = 0; i < (*dealItr).hand.length(); i++){
+                }
+        }else if(checkHand(*dealItr)==41||checkHand(*dealItr)==32){
+            int nonJ = (*dealItr).hand.find_first_not_of('J');
+            char toChange = (*dealItr).hand.at(nonJ);
+            for(int i = 0; i < (*dealItr).hand.length(); i++){
+                if((*dealItr).hand.at(i)=='J'){
+                    (*dealItr).hand[i] = toChange;
+                }
+            }
+            fiveOfAKind.push_back(*dealItr);
+        }else if(checkHand(*dealItr)==311){
+            //check for the highest card of the 2 and then make the jokers into them 
+            char highestCard = 'J';
+            for(int i = 0; i<(*dealItr).hand.length();i++){
+                if(cardValues[(*dealItr).hand.at(i)]>cardValues[highestCard]){
+                    highestCard = (*dealItr).hand.at(i);
+                }
+            }
+            for(int i = 0; i < (*dealItr).hand.length(); i++){
+                if((*dealItr).hand.at(i)=='J'){
+                    (*dealItr).hand[i] = highestCard;
+                }
+            }
+            fourOfAKind.push_back(*dealItr);
+        }else if(checkHand(*dealItr)==221){
+            //if joker pair = 4 of a kind,  if not full house 
+            int noOfJokers = checkJokers((*dealItr).hand);
+            if(noOfJokers == 2){
+                char toChange;
+                map<char,int>::iterator mapItr; 
+                for(mapItr = (*dealItr).dupesInHand.begin(); mapItr != (*dealItr).dupesInHand.end(); mapItr++){
+                    if(mapItr->second==2){
+                        toChange = mapItr->first;
+                        break;
+                    }
+                }
+                for(int i = 0; i<(*dealItr).hand.length();i++){
                     if((*dealItr).hand.at(i)=='J'){
                         (*dealItr).hand[i] = toChange;
                     }
                 }
+                fourOfAKind.push_back(*dealItr);
+            }else if(noOfJokers==1){
+                char toChange; 
+                map<char, int>::iterator mapItr; 
+                mapItr = (*dealItr).dupesInHand.begin();
+                toChange = mapItr->first; 
+                for(int i = 0; i<(*dealItr).hand.length();i++){
+                    if((*dealItr).hand.at(i)=='J'){
+                        (*dealItr).hand[i] = toChange;
+                    }  
+                }
+                fullHouse.push_back(*dealItr);
             }
+        }else if(checkHand(*dealItr)==2111){
+            char highestCard = 'J';
+            for(int i = 0; i<(*dealItr).hand.length();i++){
+                if(cardValues[(*dealItr).hand.at(i)]>cardValues[highestCard]){
+                    highestCard = (*dealItr).hand.at(i);
+                }
+            }
+            for(int i = 0; i < (*dealItr).hand.length(); i++){
+                if((*dealItr).hand.at(i)=='J'){
+                    (*dealItr).hand[i] = highestCard;
+                }
+            } 
+            threeOfAKind.push_back(*dealItr); 
+        }else if(checkHand(*dealItr)==0){
+            char highestCard; 
+            map<char, int>::iterator mapItr; 
+            mapItr = (*dealItr).dupesInHand.begin();
+            highestCard = mapItr->first;
+            for(int i = 0; i < (*dealItr).hand.length(); i++){
+                if((*dealItr).hand.at(i)=='J'){
+                    (*dealItr).hand[i] = highestCard;
+                }
+            } 
+            onePair.push_back(*dealItr);
         }
     }
     
+    sort(fiveOfAKind.begin(), fiveOfAKind.end(), compareByDecValue);
+    sort(fourOfAKind.begin(), fourOfAKind.end(), compareByDecValue);
+    sort(fullHouse.begin(), fullHouse.end(), compareByDecValue);
+    sort(threeOfAKind.begin(), threeOfAKind.end(), compareByDecValue);
+    sort(twoPair.begin(), twoPair.end(), compareByDecValue);
+    sort(onePair.begin(), onePair.end(), compareByDecValue);
+    sort(highCard.begin(), highCard.end(), compareByDecValue);
 
     printDealVector(fiveOfAKind); cout<<endl;
     printDealVector(fourOfAKind);cout<<endl;
@@ -205,6 +291,25 @@ int main(){
     printDealVector(twoPair);cout<<endl;
     printDealVector(onePair);cout<<endl;
     printDealVector(highCard);cout<<endl;
+
+    assignRank(fiveOfAKind, rank);
+    assignRank(fourOfAKind, rank);
+    assignRank(fullHouse, rank);
+    assignRank(threeOfAKind, rank);
+    assignRank(twoPair, rank);
+    assignRank(onePair, rank);
+    assignRank(highCard, rank);
+
+    product=getVectorValues(fiveOfAKind)
+            +getVectorValues(fourOfAKind)
+            +getVectorValues(fullHouse)
+            +getVectorValues(threeOfAKind)
+            +getVectorValues(twoPair)
+            +getVectorValues(onePair)
+            +getVectorValues(highCard);
+
+    cout<<endl<<product;
+
 
     return 0; 
 }
