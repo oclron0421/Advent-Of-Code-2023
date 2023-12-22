@@ -47,6 +47,7 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "regex": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "unordered_map": "cpp"
     }
 }
